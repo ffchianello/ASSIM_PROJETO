@@ -1,0 +1,23 @@
+-- Script de criação do banco e tabelas
+CREATE DATABASE IF NOT EXISTS assim_saude CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE assim_saude;
+
+CREATE TABLE IF NOT EXISTS cargos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nome VARCHAR(150) NOT NULL,
+  salario DECIMAL(12,2) NOT NULL,
+  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS funcionarios (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nome VARCHAR(200) NOT NULL,
+  data_nascimento DATE NULL,
+  endereco TEXT NULL,
+  cpf VARCHAR(14) NOT NULL UNIQUE,
+  email VARCHAR(150) NULL,
+  telefone VARCHAR(50) NULL,
+  cargo_id INT NOT NULL,
+  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (cargo_id) REFERENCES cargos(id) ON DELETE RESTRICT ON UPDATE CASCADE
+);

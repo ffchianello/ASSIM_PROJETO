@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Relatório</title><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="styles.css"></head>
+<body>
+<header><h1>Relatório de Funcionários</h1><nav><a href="index.html">Início</a> <a href="cargos.html">Cargos</a> <a href="funcionarios.html">Funcionários</a> <a href="relatorio.html">Relatório</a></nav></header>
+<main class="container">
+  <div class="form-row">
+    <input id="q" class="input" placeholder="Filtrar por nome">
+    <select id="filterCargo" class="input"><option value="">Todos os cargos</option></select>
+    <button id="btnFilter" class="btn">Filtrar</button>
+  </div>
+  <table id="tableRel"><thead><tr><th>Nome</th><th>Telefone</th><th>Cargo</th><th>Salário</th></tr></thead><tbody></tbody></table>
+<script>
+const api = '../backend/api/relatorio.php';
+const apiCargos = '../backend/api/cargos.php';
+async function loadCargos(){
+  const res = await fetch(apiCargos+'?action=list'); const data = await res.json();
+  const sel = document.getElementById('filterCargo');
+  data.forEach(c=> sel.innerHTML += `<option value="${c.id}">${c.nome}</option>`);
+}
+async function fetchReport(){
+  const q = document.getElementById('q').value;
+  const cargo = document.getElementById('filterCargo').value;
+  const url = api + '?q=' + encodeURIComponent(q) + (cargo ? '&cargo='+encodeURIComponent(cargo) : '');
+  const res = await fetch(url); const data = await res.json();
+  const tbody = document.querySelector('#tableRel tbody'); tbody.innerHTML = '';
+  data.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.nome}</td><td>${r.telefone || ''}</td><td>${r.cargo}</td><td>${r.salario}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+document.getElementById('btnFilter').onclick = fetchReport;
+loadCargos(); fetchReport();
+</script>
+</main>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Cadastro Cargos</title><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="styles.css"></head>
+<body>
+<header><h1>Cadastro de Cargos</h1><nav><a href="index.html">Início</a> <a href="cargos.html">Cargos</a> <a href="funcionarios.html">Funcionários</a> <a href="relatorio.html">Relatório</a></nav></header>
+<main class="container">
+  <div>
+    <div class="form-row">
+      <input id="searchNome" class="input" placeholder="Pesquisar por nome do cargo">
+      <button id="btnSearch" class="btn">Pesquisar</button>
+    </div>
+    <table id="tableCargos"><thead><tr><th>ID</th><th>Nome</th><th>Salário</th></tr></thead><tbody></tbody></table>
+    <h3>Detalhes</h3>
+    <div class="form-row"><label style="width:120px">ID</label><input id="id" class="input" readonly></div>
+    <div class="form-row"><label style="width:120px">Nome*</label><input id="nome" class="input"></div>
+    <div class="form-row"><label style="width:120px">Salário*</label><input id="salario" class="input" type="number" step="0.01"></div>
+    <div class="form-row">
+      <button id="btnCreate" class="btn">Incluir</button>
+      <button id="btnUpdate" class="btn">Atualizar</button>
+      <button id="btnDelete" class="btn">Excluir</button>
+    </div>
+  </div>
+<script>
+const api = '../backend/api/cargos.php';
+async function fetchList(q=''){
+  const url = api + (q ? '?action=search&q='+encodeURIComponent(q) : '?action=list');
+  const res = await fetch(url);
+  const data = await res.json();
+  const tbody = document.querySelector('#tableCargos tbody');
+  tbody.innerHTML = '';
+  data.forEach(c=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${c.id}</td><td>${c.nome}</td><td>${c.salario}</td>`;
+    tr.onclick = ()=>loadToForm(c);
+    tbody.appendChild(tr);
+  });
+}
+function loadToForm(c){
+  document.getElementById('id').value = c.id;
+  document.getElementById('nome').value = c.nome;
+  document.getElementById('salario').value = c.salario;
+}
+document.getElementById('btnSearch').onclick = ()=>fetchList(document.getElementById('searchNome').value);
+document.getElementById('btnCreate').onclick = async ()=>{
+  const nome = document.getElementById('nome').value;
+  const salario = document.getElementById('salario').value;
+  const res = await fetch(api+'?action=create',{method:'POST',body:JSON.stringify({nome,salario})});
+  const j = await res.json(); if(j.error) alert(j.error); else{ alert('Criado'); fetchList(); }
+}
+document.getElementById('btnUpdate').onclick = async ()=>{
+  const id = document.getElementById('id').value;
+  const nome = document.getElementById('nome').value;
+  const salario = document.getElementById('salario').value;
+  const res = await fetch(api+'?action=update',{method:'POST',body:JSON.stringify({id,nome,salario})});
+  const j = await res.json(); if(j.error) alert(j.error); else{ alert('Atualizado'); fetchList(); }
+}
+document.getElementById('btnDelete').onclick = async ()=>{
+  const id = document.getElementById('id').value;
+  if(!id) return alert('Selecione um registro');
+  if(!confirm('Excluir?')) return;
+  const res = await fetch(api+'?action=delete&id='+id);
+  const j = await res.json(); if(j.error) alert(j.error); else{ alert('Excluído'); fetchList(); }
+}
+fetchList();
+</script>
+</main>
+</body>
+</html>

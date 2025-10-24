@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Cadastro Funcionários</title><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="styles.css"></head>
+<body>
+<header><h1>Cadastro de Funcionários</h1><nav><a href="index.html">Início</a> <a href="cargos.html">Cargos</a> <a href="funcionarios.html">Funcionários</a> <a href="relatorio.html">Relatório</a></nav></header>
+<main class="container">
+  <div>
+    <div class="form-row">
+      <input id="searchNome" class="input" placeholder="Pesquisar por nome">
+      <input id="searchCpf" class="input" placeholder="Pesquisar por CPF">
+      <button id="btnSearch" class="btn">Pesquisar</button>
+    </div>
+    <table id="tableFunc"><thead><tr><th>ID</th><th>Nome</th><th>CPF</th><th>Cargo</th></tr></thead><tbody></tbody></table>
+    <h3>Detalhes</h3>
+    <div class="form-row"><label style="width:120px">ID</label><input id="id" class="input" readonly></div>
+    <div class="form-row"><label style="width:120px">Nome*</label><input id="nome" class="input"></div>
+    <div class="form-row"><label style="width:120px">Data Nasc</label><input id="data_nascimento" class="input" type="date"></div>
+    <div class="form-row"><label style="width:120px">Endereço</label><textarea id="endereco" class="input"></textarea></div>
+    <div class="form-row"><label style="width:120px">CPF*</label><input id="cpf" class="input"></div>
+    <div class="form-row"><label style="width:120px">E-mail</label><input id="email" class="input" type="email"></div>
+    <div class="form-row"><label style="width:120px">Telefone</label><input id="telefone" class="input"></div>
+    <div class="form-row"><label style="width:120px">Cargo*</label><select id="cargo_id" class="input"></select></div>
+    <div class="form-row">
+      <button id="btnCreate" class="btn">Incluir</button>
+      <button id="btnUpdate" class="btn">Atualizar</button>
+      <button id="btnDelete" class="btn">Excluir</button>
+    </div>
+  </div>
+<script>
+const api = '../backend/api/funcionarios.php';
+const apiCargos = '../backend/api/cargos.php';
+async function loadCargos(){
+  const res = await fetch(apiCargos+'?action=list'); const data = await res.json();
+  const sel = document.getElementById('cargo_id'); sel.innerHTML = '<option value="">-- selecione --</option>';
+  data.forEach(c=> sel.innerHTML += `<option value="${c.id}">${c.nome} — ${c.salario}</option>`);
+}
+async function fetchList(nome='', cpf=''){
+  let url = api+'?action=list';
+  if(nome || cpf) url = api+'?action=search' + (cpf ? '&cpf='+encodeURIComponent(cpf) : '&q='+encodeURIComponent(nome));
+  const res = await fetch(url); const data = await res.json();
+  const tbody = document.querySelector('#tableFunc tbody'); tbody.innerHTML = '';
+  data.forEach(f=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${f.id}</td><td>${f.nome}</td><td>${f.cpf}</td><td>${f.cargo_nome}</td>`;
+    tr.onclick = ()=>loadToForm(f);
+    tbody.appendChild(tr);
+  });
+}
+function loadToForm(f){
+  document.getElementById('id').value = f.id;
+  document.getElementById('nome').value = f.nome;
+  document.getElementById('data_nascimento').value = f.data_nascimento || '';
+  document.getElementById('endereco').value = f.endereco || '';
+  document.getElementById('cpf').value = f.cpf;
+  document.getElementById('email').value = f.email || '';
+  document.getElementById('telefone').value = f.telefone || '';
+  document.getElementById('cargo_id').value = f.cargo_id;
+}
+document.getElementById('btnSearch').onclick = ()=>fetchList(document.getElementById('searchNome').value, document.getElementById('searchCpf').value);
+document.getElementById('btnCreate').onclick = async ()=>{
+  const payload = {
+    nome: document.getElementById('nome').value,
+    data_nascimento: document.getElementById('data_nascimento').value,
+    endereco: document.getElementById('endereco').value,
+    cpf: document.getElementById('cpf').value,
+    email: document.getElementById('email').value,
+    telefone: document.getElementById('telefone').value,
+    cargo_id: document.getElementById('cargo_id').value
+  };
+  const res = await fetch(api+'?action=create',{method:'POST',body:JSON.stringify(payload)}); const j = await res.json();
+  if(j.error) alert(j.error); else{ alert('Criado'); fetchList(); }
+}
+document.getElementById('btnUpdate').onclick = async ()=>{
+  const payload = {
+    id: document.getElementById('id').value,
+    nome: document.getElementById('nome').value,
+    data_nascimento: document.getElementById('data_nascimento').value,
+    endereco: document.getElementById('endereco').value,
+    cpf: document.getElementById('cpf').value,
+    email: document.getElementById('email').value,
+    telefone: document.getElementById('telefone').value,
+    cargo_id: document.getElementById('cargo_id').value
+  };
+  const res = await fetch(api+'?action=update',{method:'POST',body:JSON.stringify(payload)}); const j = await res.json();
+  if(j.error) alert(j.error); else{ alert('Atualizado'); fetchList(); }
+}
+document.getElementById('btnDelete').onclick = async ()=>{
+  const id = document.getElementById('id').value;
+  if(!id) return alert('Selecione um registro');
+  if(!confirm('Excluir?')) return;
+  const res = await fetch(api+'?action=delete&id='+id);
+  const j = await res.json(); if(j.error) alert(j.error); else{ alert('Excluído'); fetchList(); }
+}
+loadCargos(); fetchList();
+</script>
+</main>
+</body>
+</html>
